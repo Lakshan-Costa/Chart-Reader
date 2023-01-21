@@ -7,14 +7,19 @@ import numpy as np
 from os import walk
 from PIL import Image
 
-def dataOCR(left_line, bottom_line):
+def dataOCR(left_line, bottom_line, top_border_line):
+    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart/VerticalBar53.jpg'
+
     x1, y1, x2, y2 = left_line
     x3, y3, x4, y4 = bottom_line
+    x5, y5, x6, y6 = top_border_line
+    
+    
+    
     # Paddleocr supports Chinese, English, French, German, Korean and Japanese.
     # You can set the parameter `lang` as `ch`, `en`, `french`, `german`, `korean`, `japan`
     # to switch the language model in order.
     ocr = PaddleOCR(use_angle_cls=True, lang='en') # need to run only once to download and load model into memory
-    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart/VerticalBar18.jpg'
     result = ocr.ocr(img_path, cls=True)
     # Get the boxes, texts, and scores for the lines on the left of the line
     top_txts = []
@@ -34,8 +39,11 @@ def dataOCR(left_line, bottom_line):
     title_scores = []
     for idx in range(len(result)):
         res = result[idx]
+        
         for line in res:
+            print(line)
             box = line[0]
+            
             if box[0][0] < x1:
                 left_boxes.append(box)
                 left_txts.append(line[1][0])
@@ -44,7 +52,7 @@ def dataOCR(left_line, bottom_line):
                 bottom_boxes.append(box)
                 bottom_txts.append(line[1][0])
                 bottom_scores.append(line[1][1])
-            else:
+            elif box[1][1] > y5:
                 title_boxes.append(box)
                 title_txts.append(line[1][0])
                 title_scores.append(line[1][1])
@@ -109,25 +117,33 @@ def axisLines(file_Name, i):
     #calculating the slope of the lines
     slope1 = (bottom_line[3]-bottom_line[1])/(bottom_line[2]-bottom_line[0])
     slope2 = (left_line[3]-left_line[1])/(left_line[2]-left_line[0]) if (left_line[2]-left_line[0])!=0 else 0.00001
-    
+    width, height = Image.open(file_Name).size
+    top_border_line = 0, 0, width, 0
     #if slope of the lines is close to infinity or close to 0, that means the lines are almost vertical or horizontal
     if abs(slope1) < 0.1  or abs(slope1) > 10:
-        #width = img.shape[1]
-    
-        #bottom_line = (0, bottom_line[1], width, bottom_line[3])
         cv2.line(img, (bottom_line[0], bottom_line[1]), (bottom_line[2], bottom_line[3]), (0, 0, 255), 2)
     if abs(slope2) < 0.1 or abs(slope2) > 10:
         cv2.line(img, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 2)
-    cv2.imwrite("axis/"+i+"result.png", img)
-    print(i)
+    cv2.imwrite("axis/"+str(i)+"result.png", img)
     
-    #dataOCR(left_line, bottom_line)
+
+
+    cnts = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+
+    for c in cnts:
+        if c[0][0][1] < bottom_line[3] and c[0][0][0] > left_line[0]: 
+            cv2.drawContours(img,[c], 0, (0,200,0), 1)
+            print("x: ", c[0][0][0], "y: ", c[0][0][1])
+
+    cv2.imshow("result", img)
+    cv2.waitKey(0)
+    
+    dataOCR(left_line, bottom_line, top_border_line)
     
     #INCREASE ACCURACY OF THE AXIS DETECTION
     #Get the lines which are above the text and on the right so if there is a border there wouldn't be an issue
     #Get the lines if the line postion is after more than 50% of the image
-
-
    
 
 def fileNames():
@@ -135,5 +151,5 @@ def fileNames():
     filenames = next(walk(folder), (None, None, []))[2]  # [] if no file
     for i in filenames:
         axisLines(f"{folder}/{i}", i)
-fileNames()
-#axisLines()
+#fileNames()
+axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart/VerticalBar53.jpg", 1)
