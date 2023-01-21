@@ -8,7 +8,6 @@ from os import walk
 from PIL import Image
 
 def dataOCR(left_line, bottom_line):
-    print("OCR")
     x1, y1, x2, y2 = left_line
     x3, y3, x4, y4 = bottom_line
     # Paddleocr supports Chinese, English, French, German, Korean and Japanese.
@@ -29,7 +28,10 @@ def dataOCR(left_line, bottom_line):
     bottom_boxes = []
     bottom_txts = []
     bottom_scores = []
-    print("OCRasdasd")
+
+    title_boxes = []
+    title_txts = []
+    title_scores = []
     for idx in range(len(result)):
         res = result[idx]
         for line in res:
@@ -38,15 +40,14 @@ def dataOCR(left_line, bottom_line):
                 left_boxes.append(box)
                 left_txts.append(line[1][0])
                 left_scores.append(line[1][1])
-            if box[1][1] > y4:
+            elif box[1][1] > y4:
                 bottom_boxes.append(box)
                 bottom_txts.append(line[1][0])
                 bottom_scores.append(line[1][1])
-            if box[0][1] > 0:
-                #min_y = box[0][1]
-                top_boxes.append(box)
-                top_txts.append(line[1][0])
-                top_scores.append(line[1][1])
+            else:
+                title_boxes.append(box)
+                title_txts.append(line[1][0])
+                title_scores.append(line[1][1])
                 
     # draw result for left line
     
@@ -61,7 +62,7 @@ def dataOCR(left_line, bottom_line):
     im_show.save('resultbottom.jpg')
     # draw result for top
     image = Image.open(img_path).convert('RGB')
-    im_show = draw_ocr(image, top_boxes, top_txts, top_scores, font_path='arial_narrow_7.ttf')
+    im_show = draw_ocr(image, title_boxes, title_txts, title_scores, font_path='arial_narrow_7.ttf')
     im_show = Image.fromarray(im_show)
     im_show.save('resulttop.jpg')
 
@@ -69,9 +70,8 @@ def dataOCR(left_line, bottom_line):
 
 
 
-def axisLines():
-    img = cv2.imread("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart/VerticalBar18.jpg")
-  
+def axisLines(file_Name, i):
+    img = cv2.imread(file_Name)  
     # Convert the img to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
   
@@ -109,36 +109,31 @@ def axisLines():
     #calculating the slope of the lines
     slope1 = (bottom_line[3]-bottom_line[1])/(bottom_line[2]-bottom_line[0])
     slope2 = (left_line[3]-left_line[1])/(left_line[2]-left_line[0]) if (left_line[2]-left_line[0])!=0 else 0.00001
-
+    
     #if slope of the lines is close to infinity or close to 0, that means the lines are almost vertical or horizontal
-    if abs(slope1) < 0.1 or abs(slope1) > 10:
+    if abs(slope1) < 0.1  or abs(slope1) > 10:
+        #width = img.shape[1]
+    
+        #bottom_line = (0, bottom_line[1], width, bottom_line[3])
         cv2.line(img, (bottom_line[0], bottom_line[1]), (bottom_line[2], bottom_line[3]), (0, 0, 255), 2)
     if abs(slope2) < 0.1 or abs(slope2) > 10:
         cv2.line(img, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 2)
-    cv2.imwrite("result.png", img)
-    dataOCR(left_line, bottom_line)
+    cv2.imwrite("axis/"+i+"result.png", img)
+    print(i)
+    
+    #dataOCR(left_line, bottom_line)
     
     #INCREASE ACCURACY OF THE AXIS DETECTION
     #Get the lines which are above the text and on the right so if there is a border there wouldn't be an issue
     #Get the lines if the line postion is after more than 50% of the image
 
 
-
-    
-    
-    # Draw the left and bottom lines on the image
-    #cv2.line(img, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 2)
-    #cv2.line(img, (bottom_line[0], bottom_line[1]), (bottom_line[2], bottom_line[3]), (0, 0, 255), 2)
-    # All the changes made in the input image are finally
-    # written on a new image houghlines.jpg
-    #cv2.imwrite("axis/"+i+"result.png", img)
-    print(" done")
-    
+   
 
 def fileNames():
     folder = "C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart"
     filenames = next(walk(folder), (None, None, []))[2]  # [] if no file
     for i in filenames:
         axisLines(f"{folder}/{i}", i)
-
-axisLines()
+fileNames()
+#axisLines()
