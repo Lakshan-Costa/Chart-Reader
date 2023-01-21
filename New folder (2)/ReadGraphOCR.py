@@ -2,90 +2,143 @@ from paddleocr import PaddleOCR,draw_ocr
 import sys
 import math
 import csv
-
-# Paddleocr supports Chinese, English, French, German, Korean and Japanese.
-# You can set the parameter `lang` as `ch`, `en`, `french`, `german`, `korean`, `japan`
-# to switch the language model in order.
-ocr = PaddleOCR(use_angle_cls=True, lang='en') # need to run only once to download and load model into memory
-img_path = '1483.png'
-result = ocr.ocr(img_path, cls=True)
-for idx in range(len(result)):
-    res = result[idx]
-    for line in res:
-        print(line)
-
-# draw result
-from PIL import Image
-result = result[0]
-image = Image.open(img_path).convert('RGB')
-boxes = [line[0] for line in result]
-txts = [line[1][0] for line in result]
-scores = [line[1][1] for line in result]
-im_show = draw_ocr(image, boxes, txts, scores, font_path='arial_narrow_7.ttf')
-im_show = Image.fromarray(im_show)
-im_show.save('result.jpg')
-
-print(len(result))
-with open("1483.csv", "w", newline="") as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(['file_name', 'chart_title', 'x_title_Bounding_Box', 'x_title', 'y_title_Bounding_Box', 'y_title', 'chart_type_Bounding_Box', 'chart_type', 'x_Bounding_Box', 'x', 'y_Bounding_Box', 'y'])
-
-    row = []
-    x_values = []
-    y_values = []
-    for i in range(len(result)):
-        for lines in result:
-            if (i==0):
-                row.append(img_path)
-                row.append(lines[1][0])
-                break
-            if(i==1):
-                row.append(lines[0])
-                break
-            if(i==2):
-                row.append(lines[1][0])
-                break
-            if(i==3):
-                row.append(lines[0])
-                break
-            if(i==4):
-                row.append(lines[1][0])
-                break
-            if(i==5):
-                row.append(lines[0])
-                break
-    
-    writer.writerow(row)
-            
-    
-
-    
-'''
-#openCV
 import cv2
 import numpy as np
+from os import walk
+from PIL import Image
 
-# read the input image
-img = cv2.imread('2.png')
+def dataOCR(left_line, bottom_line):
+    print("OCR")
+    x1, y1, x2, y2 = left_line
+    x3, y3, x4, y4 = bottom_line
+    # Paddleocr supports Chinese, English, French, German, Korean and Japanese.
+    # You can set the parameter `lang` as `ch`, `en`, `french`, `german`, `korean`, `japan`
+    # to switch the language model in order.
+    ocr = PaddleOCR(use_angle_cls=True, lang='en') # need to run only once to download and load model into memory
+    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart/VerticalBar18.jpg'
+    result = ocr.ocr(img_path, cls=True)
+    # Get the boxes, texts, and scores for the lines on the left of the line
+    top_txts = []
+    top_boxes = []
+    top_scores = []
+    min_y = y1
+    left_boxes = []
+    left_txts = []
+    left_scores = []
+    # Get the boxes, texts, and scores for the lines on the bottom of the line
+    bottom_boxes = []
+    bottom_txts = []
+    bottom_scores = []
+    print("OCRasdasd")
+    for idx in range(len(result)):
+        res = result[idx]
+        for line in res:
+            box = line[0]
+            if box[0][0] < x1:
+                left_boxes.append(box)
+                left_txts.append(line[1][0])
+                left_scores.append(line[1][1])
+            if box[1][1] > y4:
+                bottom_boxes.append(box)
+                bottom_txts.append(line[1][0])
+                bottom_scores.append(line[1][1])
+            if box[0][1] > 0:
+                #min_y = box[0][1]
+                top_boxes.append(box)
+                top_txts.append(line[1][0])
+                top_scores.append(line[1][1])
+                
+    # draw result for left line
+    
+    image = Image.open(img_path).convert('RGB')
+    im_show = draw_ocr(image, left_boxes, left_txts, left_scores, font_path='arial_narrow_7.ttf')
+    im_show = Image.fromarray(im_show)
+    im_show.save('resultleft.jpg')
+    # draw result for bottom line
+    image = Image.open(img_path).convert('RGB')
+    im_show = draw_ocr(image, bottom_boxes, bottom_txts, bottom_scores, font_path='arial_narrow_7.ttf')
+    im_show = Image.fromarray(im_show)
+    im_show.save('resultbottom.jpg')
+    # draw result for top
+    image = Image.open(img_path).convert('RGB')
+    im_show = draw_ocr(image, top_boxes, top_txts, top_scores, font_path='arial_narrow_7.ttf')
+    im_show = Image.fromarray(im_show)
+    im_show.save('resulttop.jpg')
 
-# convert the input image to grayscale image
-gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
-# Apply a threshold to the image to convert it to black and white
-#_, black = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY)
 
-# find the edges using Canny edge detector
-edges = cv2.Canny(gray,50,0,apertureSize = 3)
-minLineLength = 10
-maxLineGap = 5
 
-# apply probabilistic Hough transform
-lines = cv2.HoughLinesP(edges,1,np.pi/180,50,minLineLength,maxLineGap)
-for line in lines:
-   for x1,y1,x2,y2 in line:
-      cv2.line(img,(x1,y1),(x2,y2),(0,0,255),2)
-cv2.imshow('houghlines.jpg',img)
-cv2.imshow('edges', edges)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-'''
+
+def axisLines():
+    img = cv2.imread("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart/VerticalBar18.jpg")
+  
+    # Convert the img to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+  
+    # Apply edge detection method on the image
+    edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+  
+    # This returns an array of r and theta values
+    lines = cv2.HoughLines(edges, 1, np.pi/180, 200)
+  
+    # Initialize empty lists to store the left and bottom lines
+    left_line = []
+    bottom_line = []
+
+    # Iterate over the detected lines
+    for line in lines:
+        rho, theta = line[0]
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a * rho
+        y0 = b * rho
+        x1 = int(x0 + 1000 * (-b))
+        y1 = int(y0 + 1000 * (a))
+        x2 = int(x0 - 1000 * (-b))
+        y2 = int(y0 - 1000 * (a))
+
+        if abs(theta) < np.pi / 4:
+            # Check if line is leftmost
+            if (not left_line) or (x1 < left_line[0] and x2 < left_line[2]):
+                left_line = (x1, y1, x2, y2)
+        else:
+            # Check if line is bottommost
+            if (not bottom_line) or (y1 > bottom_line[1] and y2 > bottom_line[3]):
+                bottom_line = (x1, y1, x2, y2)
+
+    #calculating the slope of the lines
+    slope1 = (bottom_line[3]-bottom_line[1])/(bottom_line[2]-bottom_line[0])
+    slope2 = (left_line[3]-left_line[1])/(left_line[2]-left_line[0]) if (left_line[2]-left_line[0])!=0 else 0.00001
+
+    #if slope of the lines is close to infinity or close to 0, that means the lines are almost vertical or horizontal
+    if abs(slope1) < 0.1 or abs(slope1) > 10:
+        cv2.line(img, (bottom_line[0], bottom_line[1]), (bottom_line[2], bottom_line[3]), (0, 0, 255), 2)
+    if abs(slope2) < 0.1 or abs(slope2) > 10:
+        cv2.line(img, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 2)
+    cv2.imwrite("result.png", img)
+    dataOCR(left_line, bottom_line)
+    
+    #INCREASE ACCURACY OF THE AXIS DETECTION
+    #Get the lines which are above the text and on the right so if there is a border there wouldn't be an issue
+    #Get the lines if the line postion is after more than 50% of the image
+
+
+
+    
+    
+    # Draw the left and bottom lines on the image
+    #cv2.line(img, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 2)
+    #cv2.line(img, (bottom_line[0], bottom_line[1]), (bottom_line[2], bottom_line[3]), (0, 0, 255), 2)
+    # All the changes made in the input image are finally
+    # written on a new image houghlines.jpg
+    #cv2.imwrite("axis/"+i+"result.png", img)
+    print(" done")
+    
+
+def fileNames():
+    folder = "C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart"
+    filenames = next(walk(folder), (None, None, []))[2]  # [] if no file
+    for i in filenames:
+        axisLines(f"{folder}/{i}", i)
+
+axisLines()
