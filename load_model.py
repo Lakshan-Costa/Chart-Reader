@@ -15,7 +15,7 @@ train_generator = train_datagen.flow_from_directory(
 )
 
 # Load and preprocess the image
-img = Image.open("test/1155.png")
+img = Image.open("test/1381.png")
 img = img.resize((300, 300))
 x = np.array(img)
 x = x[:, :, :3] # Remove the 4th channel

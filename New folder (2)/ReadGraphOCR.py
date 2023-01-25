@@ -7,8 +7,14 @@ import numpy as np
 from os import walk
 from PIL import Image
 
+def VerticalBarChart():
+    print("Vertical Bar chart")
+
+def HorizontalBarChart():
+    print("Horizontal Bar chart")
+
 def dataOCR(left_line, bottom_line, top_border_line):
-    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart/VerticalBar53.jpg'
+    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart/VerticalBar26.jpg'
 
     x1, y1, x2, y2 = left_line
     x3, y3, x4, y4 = bottom_line
@@ -74,12 +80,9 @@ def dataOCR(left_line, bottom_line, top_border_line):
     im_show = Image.fromarray(im_show)
     im_show.save('resulttop.jpg')
 
-
-
-
-
-def axisLines(file_Name, i):
-    img = cv2.imread(file_Name)  
+'''
+def drawLine():
+    img = cv2.imread("result.png") 
     # Convert the img to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
   
@@ -92,6 +95,8 @@ def axisLines(file_Name, i):
     # Initialize empty lists to store the left and bottom lines
     left_line = []
     bottom_line = []
+
+    offset = 10
 
     # Iterate over the detected lines
     for line in lines:
@@ -117,17 +122,99 @@ def axisLines(file_Name, i):
     #calculating the slope of the lines
     slope1 = (bottom_line[3]-bottom_line[1])/(bottom_line[2]-bottom_line[0])
     slope2 = (left_line[3]-left_line[1])/(left_line[2]-left_line[0]) if (left_line[2]-left_line[0])!=0 else 0.00001
-    width, height = Image.open(file_Name).size
-    top_border_line = 0, 0, width, 0
+    
     #if slope of the lines is close to infinity or close to 0, that means the lines are almost vertical or horizontal
     if abs(slope1) < 0.1  or abs(slope1) > 10:
         cv2.line(img, (bottom_line[0], bottom_line[1]), (bottom_line[2], bottom_line[3]), (0, 0, 255), 2)
     if abs(slope2) < 0.1 or abs(slope2) > 10:
         cv2.line(img, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 2)
-    cv2.imwrite("axis/"+str(i)+"result.png", img)
+    cv2.imwrite("result2.png", img)
+'''
+
+def axisLines(file_Name, i):
+    img = cv2.imread(file_Name)  
+    # Convert the img to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+  
+    # Apply edge detection method on the image
+    edges = cv2.Canny(gray, 50, 150, apertureSize=3)
+  
+    # This returns an array of r and theta values
+    lines = cv2.HoughLines(edges, 1, np.pi/180, 200)
+  
+    # Initialize empty lists to store the left and bottom lines
+    left_line = []
+    bottom_line = []
+    width, height = Image.open(file_Name).size
+    top_border_line = 0, 0, width, 0
+
+    offset = 10
+
+    # Iterate over the detected lines
+    for line in lines:
+        rho, theta = line[0]
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a * rho
+        y0 = b * rho
+        x1 = int(x0 + 1000 * (-b))
+        y1 = int(y0 + 1000 * (a))
+        x2 = int(x0 - 1000 * (-b))
+        y2 = int(y0 - 1000 * (a))
+
+        if abs(theta) < np.pi / 4:
+            # Check if line is leftmost
+            if (not left_line) or (x1 < left_line[0] and x2 < left_line[2]):
+                left_line = (x1, y1, x2, y2)
+        else:
+            # Check if line is bottommost
+            if (not bottom_line) or (y1 > bottom_line[1] and y2 > bottom_line[3] and x1+x2 ==0):
+                bottom_line = (x1, y1, x2, y2)
+
+   #calculating the slope of the lines
+    slope1 = (bottom_line[3]-bottom_line[1])/(bottom_line[2]-bottom_line[0])
+    slope2 = (left_line[3]-left_line[1])/(left_line[2]-left_line[0]) if (left_line[2]-left_line[0])!=0 else 0.00001
+    
+    #if slope of the lines is close to infinity or close to 0, that means the lines are almost vertical or horizontal
+    if abs(slope1) < 0.1  or abs(slope1) > 10:
+        cv2.line(img, (bottom_line[0], bottom_line[1]), (bottom_line[2], bottom_line[3]), (0, 0, 255), 2)
+    if abs(slope2) < 0.1 or abs(slope2) > 10:
+        cv2.line(img, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 2)
+    cv2.imwrite("result.png", img)
+
+    
+    #draw rectangles
+    contours = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0] #RETR_TREE, RETR_CCOMP, RETR_LIST  https://docs.opencv.org/4.x/d9/d8b/tutorial_py_contours_hierarchy.html
+    count = 0
+    mask = np.ones(img.shape[:2], dtype="uint8") * 255
+    for c in contours:
+        x, y, w, h = cv2.boundingRect(c)
+        rect = cv2.boxPoints(cv2.minAreaRect(c))
+        
+        
+        
+        if (y + h >= bottom_line[3] and w*h>10): #
+            print([(rect[i][0], rect[i][1]) for i in range(4)])
+        #x, y = rect[i][0], rect[i][1]
+        #print("X position: ", x, "Y position: ", y)
+        if cv2.contourArea(c) > 100000 and c[0][0][1] < bottom_line[3] and c[0][0][0] > left_line[0]:
+            
+        #if w*h>1000: #Check if this displays the ledgend for all images
+            cv2.drawContours(img,[c], 0, (0,200,0), 1)
+            cv2.rectangle(mask, (x, y), (x+w, y+h), (0, 0, 255), -1)
+            
+    res_final = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
+    #cv2.imwrite("result.png", res_final)
+    #cv2.imwrite("cropped_image_without_contours.png", cropped_image_without_contours)
+
     
 
-
+    #cv2.imshow("boxes", mask)
+    cv2.imshow("final image", res_final)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    
+    '''
     cnts = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
 
@@ -138,7 +225,7 @@ def axisLines(file_Name, i):
 
     cv2.imshow("result", img)
     cv2.waitKey(0)
-    
+    '''
     dataOCR(left_line, bottom_line, top_border_line)
     
     #INCREASE ACCURACY OF THE AXIS DETECTION
@@ -152,4 +239,5 @@ def fileNames():
     for i in filenames:
         axisLines(f"{folder}/{i}", i)
 #fileNames()
-axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart/VerticalBar53.jpg", 1)
+axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart/VerticalBar26.jpg", 1)
+#axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/New folder(2)/result.png", 1)
