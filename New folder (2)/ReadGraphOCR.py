@@ -14,7 +14,7 @@ def HorizontalBarChart():
     print("Horizontal Bar chart")
 
 def dataOCR(left_line, bottom_line, top_border_line):
-    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart/VerticalBar26.jpg'
+    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Compound_Vertical_Bar_chart/123.png'
 
     x1, y1, x2, y2 = left_line
     x3, y3, x4, y4 = bottom_line
@@ -147,30 +147,44 @@ def axisLines(file_Name, i):
     bottom_line = []
     width, height = Image.open(file_Name).size
     top_border_line = 0, 0, width, 0
-
+    
     offset = 10
-
+    mid = height/2
     # Iterate over the detected lines
     for line in lines:
-        rho, theta = line[0]
+        rho, theta = line[0]            
         a = np.cos(theta)
         b = np.sin(theta)
+        aa = np.cos(90 - theta)
+        bb = np.sin(90 -theta)
         x0 = a * rho
         y0 = b * rho
+
+        y10 = bb * (-rho)
         x1 = int(x0 + 1000 * (-b))
         y1 = int(y0 + 1000 * (a))
         x2 = int(x0 - 1000 * (-b))
         y2 = int(y0 - 1000 * (a))
-
+        y3 = int(y10 + 1000 * (bb))
+        y4 = int(y10 + 1000 * (bb))
+            
         if abs(theta) < np.pi / 4:
-            # Check if line is leftmost
+                # Check if line is leftmost
             if (not left_line) or (x1 < left_line[0] and x2 < left_line[2]):
                 left_line = (x1, y1, x2, y2)
-        else:
-            # Check if line is bottommost
-            if (not bottom_line) or (y1 > bottom_line[1] and y2 > bottom_line[3] and x1+x2 ==0):
+        elif (y2>mid):
+               # Check if line is bottommost
+            if (not bottom_line):
+                #print(theta, rho)
                 bottom_line = (x1, y1, x2, y2)
-
+                #print(str(mid) +" "+ str(y1)+ file_Name)
+        else:
+            if(not bottom_line):
+                bottom_line = (x1, y3, x2, y4)
+                #print(theta,rho)
+                #print(str(mid) +" "+ str(y1)+ file_Name)
+        
+    
    #calculating the slope of the lines
     slope1 = (bottom_line[3]-bottom_line[1])/(bottom_line[2]-bottom_line[0])
     slope2 = (left_line[3]-left_line[1])/(left_line[2]-left_line[0]) if (left_line[2]-left_line[0])!=0 else 0.00001
@@ -180,8 +194,8 @@ def axisLines(file_Name, i):
         cv2.line(img, (bottom_line[0], bottom_line[1]), (bottom_line[2], bottom_line[3]), (0, 0, 255), 2)
     if abs(slope2) < 0.1 or abs(slope2) > 10:
         cv2.line(img, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 2)
-    cv2.imwrite("result.png", img)
-
+    cv2.imwrite("axis/"+str(i)+".png", img)
+    print(i)
     
     #draw rectangles
     contours = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0] #RETR_TREE, RETR_CCOMP, RETR_LIST  https://docs.opencv.org/4.x/d9/d8b/tutorial_py_contours_hierarchy.html
@@ -193,8 +207,8 @@ def axisLines(file_Name, i):
         
         
         
-        if (y + h >= bottom_line[3] and w*h>10): #
-            print([(rect[i][0], rect[i][1]) for i in range(4)])
+        #if (y + h >= bottom_line[3] and w*h>10): #
+            #print([(rect[i][0], rect[i][1]) for i in range(4)])
         #x, y = rect[i][0], rect[i][1]
         #print("X position: ", x, "Y position: ", y)
         if cv2.contourArea(c) > 100000 and c[0][0][1] < bottom_line[3] and c[0][0][0] > left_line[0]:
@@ -206,13 +220,13 @@ def axisLines(file_Name, i):
     res_final = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
     #cv2.imwrite("result.png", res_final)
     #cv2.imwrite("cropped_image_without_contours.png", cropped_image_without_contours)
-
+    #print(i)
     
 
     #cv2.imshow("boxes", mask)
-    cv2.imshow("final image", res_final)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    #cv2.imshow("final image", res_final)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
     
     '''
     cnts = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -234,10 +248,10 @@ def axisLines(file_Name, i):
    
 
 def fileNames():
-    folder = "C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart"
+    folder = "C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Compound_Vertical_Bar_chart"
     filenames = next(walk(folder), (None, None, []))[2]  # [] if no file
     for i in filenames:
         axisLines(f"{folder}/{i}", i)
 #fileNames()
-axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_Chart/VerticalBar26.jpg", 1)
+axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Compound_Vertical_Bar_chart/123.png", 1)
 #axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/New folder(2)/result.png", 1)
