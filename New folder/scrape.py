@@ -1,6 +1,6 @@
-'''
-import requests
 
+import requests
+'''
 # Open the text file containing the URLs
 with open('urls.txt', 'r') as file:
     # Read the URLs into a list
@@ -25,7 +25,7 @@ for url in urls:
 from google_images_search import GoogleImagesSearch
 
 gis = GoogleImagesSearch('API_KEY', 'CX')
-gis.search_keywords("Dogs")
+gis.search_keywords("Vertical Bar charts")
 gis.results_per_page = 100 #default is 100
 gis.offset = 0
 gis.execute()

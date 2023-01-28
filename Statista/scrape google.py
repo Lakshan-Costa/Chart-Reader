@@ -1,15 +1,25 @@
-import requests
-from bs4 import BeautifulSoup
-import os
+import google_images_download 
 
-url = "https://www.google.com/search?q=vertical+bar+chart&hl=EN&tbm=isch&source=hp&biw=1000&bih=651&ei=yBbRY8GmG_ef4-EPibCJ8Aw&iflsig=AK50M_UAAAAAY9Ek2O8AoRUtRgs3Jy7DUEbp7UBN9LsL&ved=0ahUKEwjBqpCP0-L8AhX3zzgGHQlYAs4Q4dUDCAc&uact=5&oq=vertical+bar+chart&gs_lcp=CgNpbWcQAzIFCAAQgAQyBQgAEIAEMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIGCAAQBRAeMgYIABAFEB4yBggAEAUQHjIGCAAQBRAeOggIABCABBCxA1CDBliBHWDxHWgBcAB4AIABnAGIAa8SkgEEMC4xN5gBAKABAaoBC2d3cy13aXotaW1nsAEA&sclient=img"
+response = google_images_download.googleimagesdownload() 
+search_queries = ['bar plot', 'area chart', 'box plot', 'bubble chart', 'flow chart',
+'line chart', 'map plot', 'network diagram', 'pareto chart', 'pie chart', 'radar plot',
+'scatter plot', 'tree diagram', 'venn diagram', 'pattern bar graph'] 
 
-r = requests.get(url)
+def downloadimages(query): 
+        chromedriver = r"C:\ProgramData\chocolatey\lib\chromedriver\tools\chromedriver.exe"
+        output_dir = r"D:\Summer2020\PSUProject\download\images"
+        arguments = {"keywords": query, 
+                     "limit": 2000, 
+                     "print_urls": True, 
+                     "size": "medium",
+                     "output_directory": output_dir,
+                     "chromedriver": chromedriver} 
 
-soup = BeautifulSoup(r.text, "html.parser")
+        try: 
+            response.download(arguments) 
+        except: 
+            pass
 
-images = soup.find("n3VNCb KAlRDb")
-
-
-for image in images:
-    print(image["src"])
+for query in search_queries: 
+    downloadimages(query) 
+    print()

@@ -14,7 +14,7 @@ def HorizontalBarChart():
     print("Horizontal Bar chart")
 
 def dataOCR(left_line, bottom_line, top_border_line):
-    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Compound_Vertical_Bar_chart/123.png'
+    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VerticalBar154.jpg'
 
     x1, y1, x2, y2 = left_line
     x3, y3, x4, y4 = bottom_line
@@ -28,6 +28,9 @@ def dataOCR(left_line, bottom_line, top_border_line):
     ocr = PaddleOCR(use_angle_cls=True, lang='en') # need to run only once to download and load model into memory
     result = ocr.ocr(img_path, cls=True)
     # Get the boxes, texts, and scores for the lines on the left of the line
+    all_boxes = []
+    all_txts = []
+    all_scores = []
     top_txts = []
     top_boxes = []
     top_scores = []
@@ -49,6 +52,9 @@ def dataOCR(left_line, bottom_line, top_border_line):
         for line in res:
             print(line)
             box = line[0]
+            all_boxes.append(box)
+            all_txts.append(line[1][0])
+            all_scores.append(line[1][1])
             
             if box[0][0] < x1:
                 left_boxes.append(box)
@@ -62,8 +68,13 @@ def dataOCR(left_line, bottom_line, top_border_line):
                 title_boxes.append(box)
                 title_txts.append(line[1][0])
                 title_scores.append(line[1][1])
+            
                 
     # draw result for left line
+    image = Image.open(img_path).convert('RGB')
+    im_show = draw_ocr(image, all_boxes, all_txts, all_scores, font_path='arial_narrow_7.ttf')
+    im_show = Image.fromarray(im_show)
+    im_show.save('resultOCR.jpg')
     
     image = Image.open(img_path).convert('RGB')
     im_show = draw_ocr(image, left_boxes, left_txts, left_scores, font_path='arial_narrow_7.ttf')
@@ -160,13 +171,12 @@ def axisLines(file_Name, i):
         x0 = a * rho
         y0 = b * rho
 
-        y10 = bb * (-rho)
         x1 = int(x0 + 1000 * (-b))
         y1 = int(y0 + 1000 * (a))
         x2 = int(x0 - 1000 * (-b))
         y2 = int(y0 - 1000 * (a))
-        y3 = int(y10 + 1000 * (bb))
-        y4 = int(y10 + 1000 * (bb))
+        y3 = int(y0 + 1000 * (bb))
+        y4 = int(y0 + 1000 * (bb))
             
         if abs(theta) < np.pi / 4:
                 # Check if line is leftmost
@@ -191,10 +201,10 @@ def axisLines(file_Name, i):
     
     #if slope of the lines is close to infinity or close to 0, that means the lines are almost vertical or horizontal
     if abs(slope1) < 0.1  or abs(slope1) > 10:
-        cv2.line(img, (bottom_line[0], bottom_line[1]), (bottom_line[2], bottom_line[3]), (0, 0, 255), 2)
+        cv2.line(img, (bottom_line[0], bottom_line[1]), (bottom_line[2], bottom_line[3]), (0, 0, 255), 1)
     if abs(slope2) < 0.1 or abs(slope2) > 10:
-        cv2.line(img, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 2)
-    cv2.imwrite("axis/"+str(i)+".png", img)
+        cv2.line(img, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 1)
+    cv2.imwrite("result"+str(i)+".png", img) #can remove the extention
     print(i)
     
     #draw rectangles
@@ -205,28 +215,50 @@ def axisLines(file_Name, i):
         x, y, w, h = cv2.boundingRect(c)
         rect = cv2.boxPoints(cv2.minAreaRect(c))
         
+        #print(bottom_line)
         
+        #print([(rect[i][0], rect[i][1]) for i in range(4)])
+        if(rect[2][1] < bottom_line[3] and rect[3][1] < bottom_line[1] and w*h> 100):
+                print([(rect[i][0], rect[i][1]) for i in range(4)])
+                cv2.line(img, (0, int(rect[0][1])), (int(rect[0][0])+1000, int(rect[0][1])), (255, 0, 255), 1)
+
+        #print(rect[0][0])
+        #print(left_line[0])
         
-        #if (y + h >= bottom_line[3] and w*h>10): #
-            #print([(rect[i][0], rect[i][1]) for i in range(4)])
+            #for i in range(2):
+                #for j in range (2):
+                    #if(rect[i][j] == bottom_line[1] or bottom_line[3]): #if there is an equality with the bottom_line
+                        #print("Yes")                                                                        # That means it's one of the bars
+                
         #x, y = rect[i][0], rect[i][1]
         #print("X position: ", x, "Y position: ", y)
-        if cv2.contourArea(c) > 100000 and c[0][0][1] < bottom_line[3] and c[0][0][0] > left_line[0]:
+        if cv2.contourArea(c) > 1000:
+            
             
         #if w*h>1000: #Check if this displays the ledgend for all images
-            cv2.drawContours(img,[c], 0, (0,200,0), 1)
+            cv2.drawContours(img,[c], 0, (0,255,0), 1)
             cv2.rectangle(mask, (x, y), (x+w, y+h), (0, 0, 255), -1)
+            
+                
+            
+                #cv2.line(img, (0, 100), (500, 100), (255, 0, 255), 5)
+            
+                #print("X position: ", x, "Y position: ", y)
+                
+
+                    
+            
             
     res_final = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
     #cv2.imwrite("result.png", res_final)
     #cv2.imwrite("cropped_image_without_contours.png", cropped_image_without_contours)
-    #print(i)
+
     
 
-    #cv2.imshow("boxes", mask)
-    #cv2.imshow("final image", res_final)
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
+    cv2.imshow("boxes", mask)
+    cv2.imshow("final image", res_final)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
     
     '''
     cnts = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -248,10 +280,10 @@ def axisLines(file_Name, i):
    
 
 def fileNames():
-    folder = "C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Compound_Vertical_Bar_chart"
+    folder = "C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart"
     filenames = next(walk(folder), (None, None, []))[2]  # [] if no file
     for i in filenames:
         axisLines(f"{folder}/{i}", i)
 #fileNames()
-axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Compound_Vertical_Bar_chart/123.png", 1)
+axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VerticalBar154.jpg", 1)
 #axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/New folder(2)/result.png", 1)
