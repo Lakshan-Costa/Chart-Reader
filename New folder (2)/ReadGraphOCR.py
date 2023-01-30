@@ -14,7 +14,7 @@ def HorizontalBarChart():
     print("Horizontal Bar chart")
 
 def dataOCR(left_line, bottom_line, top_border_line):
-    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VerticalBar154.jpg'
+    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC68.jpg'
 
     x1, y1, x2, y2 = left_line
     x3, y3, x4, y4 = bottom_line
@@ -171,12 +171,12 @@ def axisLines(file_Name, i):
         x0 = a * rho
         y0 = b * rho
 
-        x1 = int(x0 + 1000 * (-b))
-        y1 = int(y0 + 1000 * (a))
-        x2 = int(x0 - 1000 * (-b))
-        y2 = int(y0 - 1000 * (a))
-        y3 = int(y0 + 1000 * (bb))
-        y4 = int(y0 + 1000 * (bb))
+        x1 = int(x0 + 2000 * (-b))
+        y1 = int(y0 + 2000 * (a))
+        x2 = int(x0 - 2000 * (-b))
+        y2 = int(y0 - 2000 * (a))
+        y3 = int(y0 + 2000 * (a))
+        y4 = int(y0 + 2000 * (a))
             
         if abs(theta) < np.pi / 4:
                 # Check if line is leftmost
@@ -189,7 +189,7 @@ def axisLines(file_Name, i):
                 bottom_line = (x1, y1, x2, y2)
                 #print(str(mid) +" "+ str(y1)+ file_Name)
         else:
-            if(not bottom_line):
+            if(not bottom_line):            #These are the ones that doesn't have a bottom line
                 bottom_line = (x1, y3, x2, y4)
                 #print(theta,rho)
                 #print(str(mid) +" "+ str(y1)+ file_Name)
@@ -201,26 +201,71 @@ def axisLines(file_Name, i):
     
     #if slope of the lines is close to infinity or close to 0, that means the lines are almost vertical or horizontal
     if abs(slope1) < 0.1  or abs(slope1) > 10:
-        cv2.line(img, (bottom_line[0], bottom_line[1]), (bottom_line[2], bottom_line[3]), (0, 0, 255), 1)
+        cv2.line(img, (bottom_line[0], bottom_line[1]), (bottom_line[2], bottom_line[3]), (0, 0, 255), 2)
     if abs(slope2) < 0.1 or abs(slope2) > 10:
-        cv2.line(img, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 1)
-    cv2.imwrite("result"+str(i)+".png", img) #can remove the extention
+        cv2.line(img, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 2)
+    cv2.imwrite(r"result.png", img) #can remove the extention
     print(i)
+
+    #Create a dataset using the bottomline
+    #bottom_line_file = open("position.txt", 'a')
+    #bottom_line_file.writelines(file_Name+","+ str(bottom_line)+"\n")
+    #bottom_line_file.close()
     
     #draw rectangles
     contours = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0] #RETR_TREE, RETR_CCOMP, RETR_LIST  https://docs.opencv.org/4.x/d9/d8b/tutorial_py_contours_hierarchy.html
     count = 0
     mask = np.ones(img.shape[:2], dtype="uint8") * 255
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)[1:2] #Gives the largest contour
     for c in contours:
+        x, y, w, h = cv2.boundingRect(c)
+        rect = cv2.boxPoints(cv2.minAreaRect(c))
+        
+        cv2.drawContours(img, [c], 0, (0,255,255), 2)
+        cv2.rectangle(mask, (x, y), (x+w, y+h), (0, 0, 255), -1)
+        print([(rect[i][0], rect[i][1]) for i in range(4)])
+
+        # Detect the corners using Harris corner detection
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        gray = np.float32(gray)
+        dst = cv2.cornerHarris(gray, 2, 3, 0.04)
+        dst = cv2.dilate(dst, None)
+    
+        # Check if the Harris corner points are inside the bounding rectangle
+        for i in range(dst.shape[0]):
+            for j in range(dst.shape[1]):
+                if dst[i, j] > 0.01 * dst.max():
+                    if x <= j <= x + w and y <= i <= y + h:
+                        img[i, j] = [0, 0, 255]
+            
+        res_final = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
+        cv2.imwrite("result.png", res_final)
+        #cv2.imwrite("cropped_image_without_contours.png", cropped_image_without_contours)
+        #if(rect[2][1] < bottom_line[3] and rect[3][1] < bottom_line[1] and w*h> 100):
+                #print([(rect[i][0], rect[i][1]) for i in range(4)])
+                #cv2.line(img, (0, int(rect[0][1])), (int(rect[0][0])+1000, int(rect[0][1])), (255, 0, 255), 1)
+
+
+        #cv2.imshow("boxes", mask)
+        #cv2.imshow("final image", res_final)
+        #cv2.waitKey(0)
+        #cv2.destroyAllWindows()
+
+
+
+        
+
+        '''
         x, y, w, h = cv2.boundingRect(c)
         rect = cv2.boxPoints(cv2.minAreaRect(c))
         
         #print(bottom_line)
         
-        #print([(rect[i][0], rect[i][1]) for i in range(4)])
-        if(rect[2][1] < bottom_line[3] and rect[3][1] < bottom_line[1] and w*h> 100):
-                print([(rect[i][0], rect[i][1]) for i in range(4)])
-                cv2.line(img, (0, int(rect[0][1])), (int(rect[0][0])+1000, int(rect[0][1])), (255, 0, 255), 1)
+        print([(rect[i][0], rect[i][1]) for i in range(4)])
+
+        #if(rect[2][1] < bottom_line[3] and rect[3][1] < bottom_line[1] and w*h> 100):
+                #print([(rect[i][0], rect[i][1]) for i in range(4)])
+                #cv2.line(img, (0, int(rect[0][1])), (int(rect[0][0])+1000, int(rect[0][1])), (255, 0, 255), 1)
 
         #print(rect[0][0])
         #print(left_line[0])
@@ -240,7 +285,7 @@ def axisLines(file_Name, i):
             cv2.rectangle(mask, (x, y), (x+w, y+h), (0, 0, 255), -1)
             
                 
-            
+            '''
                 #cv2.line(img, (0, 100), (500, 100), (255, 0, 255), 5)
             
                 #print("X position: ", x, "Y position: ", y)
@@ -249,16 +294,15 @@ def axisLines(file_Name, i):
                     
             
             
-    res_final = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
+    #res_final = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
     #cv2.imwrite("result.png", res_final)
     #cv2.imwrite("cropped_image_without_contours.png", cropped_image_without_contours)
 
-    
 
-    cv2.imshow("boxes", mask)
-    cv2.imshow("final image", res_final)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    #cv2.imshow("boxes", mask)
+    #cv2.imshow("final image", res_final)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
     
     '''
     cnts = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -285,5 +329,5 @@ def fileNames():
     for i in filenames:
         axisLines(f"{folder}/{i}", i)
 #fileNames()
-axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VerticalBar154.jpg", 1)
+axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC68.jpg", 1)
 #axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/New folder(2)/result.png", 1)
