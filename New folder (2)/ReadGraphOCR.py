@@ -14,7 +14,7 @@ def HorizontalBarChart():
     print("Horizontal Bar chart")
 
 def dataOCR(left_line, bottom_line, top_border_line):
-    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC68.jpg'
+    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC132.jpg'
 
     x1, y1, x2, y2 = left_line
     x3, y3, x4, y4 = bottom_line
@@ -50,8 +50,9 @@ def dataOCR(left_line, bottom_line, top_border_line):
         res = result[idx]
         
         for line in res:
-            print(line)
+            #print(line)
             box = line[0]
+            print(box)
             all_boxes.append(box)
             all_txts.append(line[1][0])
             all_scores.append(line[1][1])
@@ -211,6 +212,8 @@ def axisLines(file_Name, i):
     #bottom_line_file = open("position.txt", 'a')
     #bottom_line_file.writelines(file_Name+","+ str(bottom_line)+"\n")
     #bottom_line_file.close()
+
+    dataOCR(left_line, bottom_line, top_border_line)
     
     #draw rectangles
     contours = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0] #RETR_TREE, RETR_CCOMP, RETR_LIST  https://docs.opencv.org/4.x/d9/d8b/tutorial_py_contours_hierarchy.html
@@ -237,6 +240,7 @@ def axisLines(file_Name, i):
                 if dst[i, j] > 0.01 * dst.max():
                     if x <= j <= x + w and y <= i <= y + h:
                         img[i, j] = [0, 0, 255]
+                        #cv2.line(img, (j, i), (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
             
         res_final = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
         cv2.imwrite("result.png", res_final)
@@ -316,7 +320,7 @@ def axisLines(file_Name, i):
     cv2.imshow("result", img)
     cv2.waitKey(0)
     '''
-    dataOCR(left_line, bottom_line, top_border_line)
+    
     
     #INCREASE ACCURACY OF THE AXIS DETECTION
     #Get the lines which are above the text and on the right so if there is a border there wouldn't be an issue
@@ -329,5 +333,5 @@ def fileNames():
     for i in filenames:
         axisLines(f"{folder}/{i}", i)
 #fileNames()
-axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC68.jpg", 1)
+axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC132.jpg", 1)
 #axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/New folder(2)/result.png", 1)
