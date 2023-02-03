@@ -245,7 +245,7 @@ def axisLines(file_Name, i):
                         # Check if the starting point of the line is not inside the bounding boxes
                         line_start_point = (j, i)
                         inside_box = False
-                        for l in range(len(res)):
+                        for l in range(len(res)):   #What's the difference??
                             x_min, y_min = res[l][0][0][0], res[l][0][0][1]
                             x_max, y_max = res[l][0][2][0], res[l][0][2][1]
                             if x_min <= j <= x_max and y_min <= i <= y_max:
@@ -265,9 +265,18 @@ def axisLines(file_Name, i):
                             #x3, y3 and x4, y4 are the 2 ends of the left line
 
                             x = (y1 + slope1*x1 - y3 + slope2*y3 - slope2*y1 - slope1*slope2*x1)/(slope1*(1 - slope2))
-                            
+                            y = y1 - slope1*x1 + slope1*x
 
-                            print(float(x), "x")
+                            yintersection = bottom_line[1]
+                            xintersection = left_line[0]
+                            print(yintersection)
+                            print(xintersection)        #Get this using the equation for a rotated image.
+
+                            #ynew = (y3 -slope2*y3)/(1 - slope2)
+                            #print("y", y)
+                            #print("ynew", ynew)
+
+                            #print(float(x), "x")
                             
                             
                             break
