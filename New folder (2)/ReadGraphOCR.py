@@ -47,12 +47,11 @@ def dataOCR(left_line, bottom_line, top_border_line):
     title_txts = []
     title_scores = []
     for idx in range(len(result)):
+        global res
         res = result[idx]
-        
+        print(res)
         for line in res:
-            #print(line)
             box = line[0]
-            print(box)
             all_boxes.append(box)
             all_txts.append(line[1][0])
             all_scores.append(line[1][1])
@@ -91,6 +90,7 @@ def dataOCR(left_line, bottom_line, top_border_line):
     im_show = draw_ocr(image, title_boxes, title_txts, title_scores, font_path='arial_narrow_7.ttf')
     im_show = Image.fromarray(im_show)
     im_show.save('resulttop.jpg')
+    
 
 '''
 def drawLine():
@@ -240,7 +240,37 @@ def axisLines(file_Name, i):
                 if dst[i, j] > 0.01 * dst.max():
                     if x <= j <= x + w and y <= i <= y + h:
                         img[i, j] = [0, 0, 255]
+                        print(type(i))
                         #cv2.line(img, (j, i), (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
+                        # Check if the starting point of the line is not inside the bounding boxes
+                        line_start_point = (j, i)
+                        inside_box = False
+                        for l in range(len(res)):
+                            x_min, y_min = res[l][0][0][0], res[l][0][0][1]
+                            x_max, y_max = res[l][0][2][0], res[l][0][2][1]
+                            if x_min <= j <= x_max and y_min <= i <= y_max:
+                                inside_box = True
+                                break
+                        if not inside_box:
+                            cv2.line(img, line_start_point, (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
+
+
+                            # i is the y value in pixels
+                            #Need to get the y position of the intersection
+
+                            #slope1 - bottom line slope
+                            #slope2 - left line slope
+
+                            #x1,y1 and x2, y2 are the 2 ends of the bottom line
+                            #x3, y3 and x4, y4 are the 2 ends of the left line
+
+                            x = (y1 + slope1*x1 - y3 + slope2*y3 - slope2*y1 - slope1*slope2*x1)/(slope1*(1 - slope2))
+                            
+
+                            print(float(x), "x")
+                            
+                            
+                            break
             
         res_final = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
         cv2.imwrite("result.png", res_final)
