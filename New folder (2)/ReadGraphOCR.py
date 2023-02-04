@@ -13,8 +13,12 @@ def VerticalBarChart():
 def HorizontalBarChart():
     print("Horizontal Bar chart")
 
+#def calculatingYValue(line_start_point):
+    #print(line_start_point, "start point")
+    
+
 def dataOCR(left_line, bottom_line, top_border_line):
-    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC132.jpg'
+    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC16.jpg'
 
     x1, y1, x2, y2 = left_line
     x3, y3, x4, y4 = bottom_line
@@ -35,6 +39,8 @@ def dataOCR(left_line, bottom_line, top_border_line):
     top_boxes = []
     top_scores = []
     min_y = y1
+
+    global left_boxes
     left_boxes = []
     left_txts = []
     left_scores = []
@@ -57,6 +63,7 @@ def dataOCR(left_line, bottom_line, top_border_line):
             all_scores.append(line[1][1])
             
             if box[0][0] < x1:
+                
                 left_boxes.append(box)
                 left_txts.append(line[1][0])
                 left_scores.append(line[1][1])
@@ -240,21 +247,26 @@ def axisLines(file_Name, i):
                 if dst[i, j] > 0.01 * dst.max():
                     if x <= j <= x + w and y <= i <= y + h:
                         img[i, j] = [0, 0, 255]
-                        print(type(i))
-                        #cv2.line(img, (j, i), (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
+                        
+                        cv2.line(img, (j, i), (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
                         # Check if the starting point of the line is not inside the bounding boxes
                         line_start_point = (j, i)
                         inside_box = False
                         for l in range(len(res)):   #What's the difference??
+                            
                             x_min, y_min = res[l][0][0][0], res[l][0][0][1]
                             x_max, y_max = res[l][0][2][0], res[l][0][2][1]
                             if x_min <= j <= x_max and y_min <= i <= y_max:
                                 inside_box = True
                                 break
-                        if not inside_box:
-                            cv2.line(img, line_start_point, (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
 
-
+                                if not inside_box:
+                                    cv2.line(img, line_start_point, (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
+                            
+                                    break
+                                #calculatingYValue(line_start_point)
+                            
+    
                             # i is the y value in pixels
                             #Need to get the y position of the intersection
 
@@ -264,25 +276,41 @@ def axisLines(file_Name, i):
                             #x1,y1 and x2, y2 are the 2 ends of the bottom line
                             #x3, y3 and x4, y4 are the 2 ends of the left line
 
-                            x = (y1 + slope1*x1 - y3 + slope2*y3 - slope2*y1 - slope1*slope2*x1)/(slope1*(1 - slope2))
-                            y = y1 - slope1*x1 + slope1*x
+                                #x = (y1 + slope1*x1 - y3 + slope2*y3 - slope2*y1 - slope1*slope2*x1)/(slope1*(1 - slope2))
+                                #y = y1 - slope1*x1 + slope1*x
 
-                            yintersection = bottom_line[1]
-                            xintersection = left_line[0]
-                            print(yintersection)
-                            print(xintersection)        #Get this using the equation for a rotated image.
+                                    yintersection = bottom_line[1]
+                                    xintersection = left_line[0]
+                                    print(yintersection)
+                                    print(xintersection)        #Get this using the equation for a rotated image.
+                                
 
                             #ynew = (y3 -slope2*y3)/(1 - slope2)
                             #print("y", y)
                             #print("ynew", ynew)
-
                             #print(float(x), "x")
+                            #print(line_start_point, "Start")
                             
-                            
-                            break
-            
         res_final = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
-        cv2.imwrite("result.png", res_final)
+        cv2.imwrite("result.png", res_final)       
+        sorted_lst = sorted(left_boxes, key=lambda x: min([y[1] for y in x]), reverse=True)
+
+        highest_value1 = sorted_lst[-1][0][1]
+        highest_value2 = sorted_lst[-1][2][1]
+        
+        lowest_value1 = sorted_lst[0][0][1]
+        lowest_value2 = sorted_lst[0][2][1]
+
+        highest_value_pixel = (highest_value1+highest_value2)/2
+        lowest_value_pixel = (lowest_value1+lowest_value2)/2
+        
+        print(highest_value_pixel)
+        print(lowest_value_pixel)
+            
+        
+
+        
+        
         #cv2.imwrite("cropped_image_without_contours.png", cropped_image_without_contours)
         #if(rect[2][1] < bottom_line[3] and rect[3][1] < bottom_line[1] and w*h> 100):
                 #print([(rect[i][0], rect[i][1]) for i in range(4)])
@@ -372,5 +400,5 @@ def fileNames():
     for i in filenames:
         axisLines(f"{folder}/{i}", i)
 #fileNames()
-axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC132.jpg", 1)
+axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC16.jpg", 1)
 #axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/New folder(2)/result.png", 1)
