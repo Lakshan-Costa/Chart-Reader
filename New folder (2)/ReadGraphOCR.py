@@ -13,12 +13,12 @@ def VerticalBarChart():
 def HorizontalBarChart():
     print("Horizontal Bar chart")
 
-#def calculatingYValue(line_start_point):
-    #print(line_start_point, "start point")
+def calculatingYValue(line_start_point):
+    print(line_start_point, "start point")
     
 
 def dataOCR(left_line, bottom_line, top_border_line):
-    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC16.jpg'
+    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC147.jpg'
 
     x1, y1, x2, y2 = left_line
     x3, y3, x4, y4 = bottom_line
@@ -55,7 +55,6 @@ def dataOCR(left_line, bottom_line, top_border_line):
     for idx in range(len(result)):
         global res
         res = result[idx]
-        print(res)
         for line in res:
             box = line[0]
             all_boxes.append(box)
@@ -227,6 +226,7 @@ def axisLines(file_Name, i):
     count = 0
     mask = np.ones(img.shape[:2], dtype="uint8") * 255
     contours = sorted(contours, key=cv2.contourArea, reverse=True)[1:2] #Gives the largest contour
+    marked_y = 0
     for c in contours:
         x, y, w, h = cv2.boundingRect(c)
         rect = cv2.boxPoints(cv2.minAreaRect(c))
@@ -241,30 +241,73 @@ def axisLines(file_Name, i):
         dst = cv2.cornerHarris(gray, 2, 3, 0.04)
         dst = cv2.dilate(dst, None)
     
-        # Check if the Harris corner points are inside the bounding rectangle
+        # initialize a set to store the marked positions
+        marked_positions = set()
+
+        # loop through the dst array
         for i in range(dst.shape[0]):
             for j in range(dst.shape[1]):
+                # check if the current position is a Harris corner
                 if dst[i, j] > 0.01 * dst.max():
+                    # check if the current position is inside the bounding rectangle
                     if x <= j <= x + w and y <= i <= y + h:
-                        img[i, j] = [0, 0, 255]
-                        
-                        cv2.line(img, (j, i), (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
-                        # Check if the starting point of the line is not inside the bounding boxes
-                        line_start_point = (j, i)
-                        inside_box = False
-                        for l in range(len(res)):   #What's the difference??
+                        # check if the current position has not been marked before
+                        if (j, i) not in marked_positions:
                             
-                            x_min, y_min = res[l][0][0][0], res[l][0][0][1]
-                            x_max, y_max = res[l][0][2][0], res[l][0][2][1]
-                            if x_min <= j <= x_max and y_min <= i <= y_max:
-                                inside_box = True
-                                break
+                            # mark the position with a red dot
+                            img[i, j] = [0, 0, 255]
+                            # add the position to the set of marked positions
+                            #marked_positions.add((j, i)) # no difference
+                            
+                            marked_positions.add((j+1, i+1))
+                            marked_positions.add((j, i+2))
+                            marked_positions.add((j+3, i+2))
+                            
+                            
+                            marked_positions.add((j+1, i+3))
+                            marked_positions.add((j, i+3))
+                            marked_positions.add((j, i+1))
+                            #marked_positions.add((j-1, i)) # no difference
+                            #marked_positions.add((j+2, i)) #red dot should be one pixel
 
-                                if not inside_box:
-                                    cv2.line(img, line_start_point, (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
                             
+                            
+
+                            '''
+                            marked_positions.add((j+1, i+1))
+                            marked_positions.add((j-1, i-1))
+                            marked_positions.add((j+1, i))
+                            marked_positions.add((j, i+1))
+                            marked_positions.add((j-1, i))
+                            marked_positions.add((j, i-1))
+                            marked_positions.add((j, i-2))
+                            marked_positions.add((j+1, i+2))
+                            marked_positions.add((j-1, i+2))
+                            marked_positions.add((j-2, i+2))
+                            marked_positions.add((j+2, i+2))
+                            '''
+                        
+                        
+                            #cv2.line(img, (j, i), (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
+                            # Check if the starting point of the line is not inside the bounding boxes
+                            
+                            inside_box = False
+                            for l in range(len(res)):   #What's the difference??
+                                #print(j, i)
+                            
+                                x_min, y_min = res[l][0][0][0], res[l][0][0][1]
+                                x_max, y_max = res[l][0][2][0], res[l][0][2][1]
+                                if x_min <= j <= x_max and y_min <= i <= y_max:
+                                    inside_box = True
                                     break
-                                #calculatingYValue(line_start_point)
+
+                            if not inside_box:
+                                
+                                line_start_point = (j, i)
+                                #cv2.line(img, line_start_point, (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
+                                if i != marked_y:  # only print if y position is different
+                                    marked_y = i
+                                    calculatingYValue(line_start_point)
                             
     
                             # i is the y value in pixels
@@ -279,17 +322,17 @@ def axisLines(file_Name, i):
                                 #x = (y1 + slope1*x1 - y3 + slope2*y3 - slope2*y1 - slope1*slope2*x1)/(slope1*(1 - slope2))
                                 #y = y1 - slope1*x1 + slope1*x
 
-                                    yintersection = bottom_line[1]
-                                    xintersection = left_line[0]
-                                    print(yintersection)
-                                    print(xintersection)        #Get this using the equation for a rotated image.
+                                yintersection = bottom_line[1]
+                                xintersection = left_line[0]
+                            #print(yintersection)
+                            #print(xintersection)        #Get this using the equation for a rotated image.
                                 
 
                             #ynew = (y3 -slope2*y3)/(1 - slope2)
                             #print("y", y)
                             #print("ynew", ynew)
                             #print(float(x), "x")
-                            #print(line_start_point, "Start")
+                            
                             
         res_final = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
         cv2.imwrite("result.png", res_final)       
@@ -400,5 +443,5 @@ def fileNames():
     for i in filenames:
         axisLines(f"{folder}/{i}", i)
 #fileNames()
-axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC16.jpg", 1)
+axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC147.jpg", 1)
 #axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/New folder(2)/result.png", 1)
