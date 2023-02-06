@@ -253,41 +253,11 @@ def axisLines(file_Name, i):
                     if x <= j <= x + w and y <= i <= y + h:
                         # check if the current position has not been marked before
                         if (j, i) not in marked_positions:
-<<<<<<< HEAD:Readingdatafile/ReadGraphOCR.py
-=======
                             
->>>>>>> devLakshan:New folder (2)/ReadGraphOCR.py
                             # mark the position with a red dot
                             img[i, j] = [0, 0, 255]
                             # add the position to the set of marked positions
                             #marked_positions.add((j, i)) # no difference
-<<<<<<< HEAD:Readingdatafile/ReadGraphOCR.py
-                            #marked_positions.add((j+1, i))
-                            #marked_positions.add((j-1, i)) # no difference
-                            marked_positions.add((j+2, i)) #red dot should be one pixel
-
-                            
-                            
-
-                            '''
-                            marked_positions.add((j+1, i+1))
-                            marked_positions.add((j-1, i-1))
-                            marked_positions.add((j+1, i))
-                            marked_positions.add((j, i+1))
-                            marked_positions.add((j-1, i))
-                            marked_positions.add((j, i-1))
-                            marked_positions.add((j, i-2))
-                            marked_positions.add((j+1, i+2))
-                            marked_positions.add((j-1, i+2))
-                            marked_positions.add((j-2, i+2))
-                            marked_positions.add((j+2, i+2))
-                            '''
-                        
-                        
-                            #cv2.line(img, (j, i), (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
-                            # Check if the starting point of the line is not inside the bounding boxes
-                            line_start_point = (j, i)
-=======
                             
                             marked_positions.add((j+1, i+1))
                             marked_positions.add((j, i+2))
@@ -321,7 +291,6 @@ def axisLines(file_Name, i):
                             #cv2.line(img, (j, i), (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
                             # Check if the starting point of the line is not inside the bounding boxes
                             
->>>>>>> devLakshan:New folder (2)/ReadGraphOCR.py
                             inside_box = False
                             for l in range(len(res)):   #What's the difference??
                                 #print(j, i)
@@ -333,17 +302,12 @@ def axisLines(file_Name, i):
                                     break
 
                             if not inside_box:
-<<<<<<< HEAD:Readingdatafile/ReadGraphOCR.py
-                                #cv2.line(img, line_start_point, (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
-                            #calculatingYValue(line_start_point)
-=======
                                 
                                 line_start_point = (j, i)
                                 #cv2.line(img, line_start_point, (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
                                 if i != marked_y:  # only print if y position is different
                                     marked_y = i
                                     calculatingYValue(line_start_point)
->>>>>>> devLakshan:New folder (2)/ReadGraphOCR.py
                             
     
                             # i is the y value in pixels
