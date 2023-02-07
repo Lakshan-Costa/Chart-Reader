@@ -13,12 +13,28 @@ def VerticalBarChart():
 def HorizontalBarChart():
     print("Horizontal Bar chart")
 
-def calculatingYValue(line_start_point):
-    print(line_start_point, "start point")
+def calculatingYValue(line_start_point, xintersection, yintersection, left_boxes, left_txts):
+    sorted_lines = sorted(left_boxes, key=lambda x: (x[0][1] + x[2][1])/2)
+    maxleftbox = ((sorted_lines[0][1][1] +sorted_lines[0][2][1])/2)
+    minleftbox = (sorted_lines[-1][1][1] + sorted_lines[-1][2][1])/2
+
+    maxlefttext = int(left_txts[0])
+    minlefttext = int(left_txts[-1])
+
+    #print(minlefttext, maxlefttext) #Minimum text value and Maximum text value
+
+    
+    
+    #print()
+    #print(yintersection, maxleftbox) #The y axis intersection and maximum value of the highest text box
+    #print(line_start_point[1]) #The bar chart y value
+
+    yvalue = ((line_start_point[1] - yintersection) * (maxlefttext - minlefttext))/(maxleftbox - yintersection) # This is the Y value test it
+    print(yvalue, 1)
     
 
 def dataOCR(left_line, bottom_line, top_border_line):
-    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC147.jpg'
+    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC71.jpg'
 
     x1, y1, x2, y2 = left_line
     x3, y3, x4, y4 = bottom_line
@@ -41,6 +57,7 @@ def dataOCR(left_line, bottom_line, top_border_line):
     min_y = y1
 
     global left_boxes
+    global left_txts
     left_boxes = []
     left_txts = []
     left_scores = []
@@ -244,6 +261,9 @@ def axisLines(file_Name, i):
         # initialize a set to store the marked positions
         marked_positions = set()
 
+        yintersection = bottom_line[1]
+        xintersection = left_line[0]
+                            
         # loop through the dst array
         for i in range(dst.shape[0]):
             for j in range(dst.shape[1]):
@@ -252,62 +272,57 @@ def axisLines(file_Name, i):
                     # check if the current position is inside the bounding rectangle
                     if x <= j <= x + w and y <= i <= y + h:
                         # check if the current position has not been marked before
-                        if (j, i) not in marked_positions:
+                        
+                            
+                        inside_box = False
+                        for l in range(len(res)):   #What's the difference?? for box in res
+                                #print(j, i)
+                            
+                            x_min, y_min = res[l][0][0][0], res[l][0][0][1]
+                            x_max, y_max = res[l][0][2][0], res[l][0][2][1]
+                            if x_min <= j <= x_max and y_min <= i <= y_max:
+                                inside_box = True
+                                break
+
+                        if not inside_box:
+                                
+                            line_start_point = (j, i)
+                            #cv2.line(img, line_start_point, (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
+                            if i != marked_y:  # only print if y position is different
+                                marked_y = i
+
+                                if (j, i) not in marked_positions:
                             
                             # mark the position with a red dot
-                            img[i, j] = [0, 0, 255]
+                                    img[i, j] = [0, 0, 255]
                             # add the position to the set of marked positions
                             #marked_positions.add((j, i)) # no difference
                             
-                            marked_positions.add((j+1, i+1))
-                            marked_positions.add((j, i+2))
-                            marked_positions.add((j+3, i+2))
+                                    marked_positions.add((j+1, i+1))
+                                    marked_positions.add((j, i+2))
+                                    marked_positions.add((j+3, i+2))
                             
                             
-                            marked_positions.add((j+1, i+3))
-                            marked_positions.add((j, i+3))
-                            marked_positions.add((j, i+1))
+                                    marked_positions.add((j+1, i+3))
+                                    marked_positions.add((j, i+3))
+                                    marked_positions.add((j, i+1))
                             #marked_positions.add((j-1, i)) # no difference
                             #marked_positions.add((j+2, i)) #red dot should be one pixel
 
                             
                             
 
-                            '''
-                            marked_positions.add((j+1, i+1))
-                            marked_positions.add((j-1, i-1))
-                            marked_positions.add((j+1, i))
-                            marked_positions.add((j, i+1))
-                            marked_positions.add((j-1, i))
-                            marked_positions.add((j, i-1))
-                            marked_positions.add((j, i-2))
-                            marked_positions.add((j+1, i+2))
-                            marked_positions.add((j-1, i+2))
-                            marked_positions.add((j-2, i+2))
-                            marked_positions.add((j+2, i+2))
-                            '''
                         
                         
-                            #cv2.line(img, (j, i), (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
-                            # Check if the starting point of the line is not inside the bounding boxes
-                            
-                            inside_box = False
-                            for l in range(len(res)):   #What's the difference??
-                                #print(j, i)
-                            
-                                x_min, y_min = res[l][0][0][0], res[l][0][0][1]
-                                x_max, y_max = res[l][0][2][0], res[l][0][2][1]
-                                if x_min <= j <= x_max and y_min <= i <= y_max:
-                                    inside_box = True
-                                    break
+                                    
+                                    cv2.line(img, (j, i), (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
 
-                            if not inside_box:
+                            # Check if the starting point of the line is not inside the bounding boxes
+
+
+
                                 
-                                line_start_point = (j, i)
-                                #cv2.line(img, line_start_point, (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
-                                if i != marked_y:  # only print if y position is different
-                                    marked_y = i
-                                    calculatingYValue(line_start_point)
+                                    
                             
     
                             # i is the y value in pixels
@@ -321,9 +336,8 @@ def axisLines(file_Name, i):
 
                                 #x = (y1 + slope1*x1 - y3 + slope2*y3 - slope2*y1 - slope1*slope2*x1)/(slope1*(1 - slope2))
                                 #y = y1 - slope1*x1 + slope1*x
-
-                                yintersection = bottom_line[1]
-                                xintersection = left_line[0]
+                                    calculatingYValue(line_start_point, xintersection, yintersection, left_boxes, left_txts)
+                            
                             #print(yintersection)
                             #print(xintersection)        #Get this using the equation for a rotated image.
                                 
@@ -443,5 +457,5 @@ def fileNames():
     for i in filenames:
         axisLines(f"{folder}/{i}", i)
 #fileNames()
-axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC147.jpg", 1)
+axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC71.jpg", 1)
 #axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/New folder(2)/result.png", 1)
