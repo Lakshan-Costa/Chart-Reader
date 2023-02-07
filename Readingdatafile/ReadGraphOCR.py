@@ -13,6 +13,13 @@ def VerticalBarChart():
 def HorizontalBarChart():
     print("Horizontal Bar chart")
 
+
+def createTable(line_start_point, yvalue):
+    print()
+
+    print("""|x | y |
+             |yvalue| bottom_boxes """)
+
 def calculatingYValue(line_start_point, xintersection, yintersection, left_boxes, left_txts):
     sorted_lines = sorted(left_boxes, key=lambda x: (x[0][1] + x[2][1])/2)
     maxleftbox = ((sorted_lines[0][1][1] +sorted_lines[0][2][1])/2)
@@ -23,18 +30,17 @@ def calculatingYValue(line_start_point, xintersection, yintersection, left_boxes
 
     #print(minlefttext, maxlefttext) #Minimum text value and Maximum text value
 
-    
-    
-    #print()
     #print(yintersection, maxleftbox) #The y axis intersection and maximum value of the highest text box
     #print(line_start_point[1]) #The bar chart y value
 
     yvalue = ((line_start_point[1] - yintersection) * (maxlefttext - minlefttext))/(maxleftbox - yintersection) # This is the Y value test it
     print(yvalue, 1)
+
+    createTable(line_start_point, yvalue)
     
 
 def dataOCR(left_line, bottom_line, top_border_line):
-    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC71.jpg'
+    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC59.jpg'
 
     x1, y1, x2, y2 = left_line
     x3, y3, x4, y4 = bottom_line
@@ -62,6 +68,10 @@ def dataOCR(left_line, bottom_line, top_border_line):
     left_txts = []
     left_scores = []
     # Get the boxes, texts, and scores for the lines on the bottom of the line
+
+
+    global bottom_boxes
+    global bottom_txts
     bottom_boxes = []
     bottom_txts = []
     bottom_scores = []
@@ -114,57 +124,6 @@ def dataOCR(left_line, bottom_line, top_border_line):
     im_show = Image.fromarray(im_show)
     im_show.save('resulttop.jpg')
     
-
-'''
-def drawLine():
-    img = cv2.imread("result.png") 
-    # Convert the img to grayscale
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-  
-    # Apply edge detection method on the image
-    edges = cv2.Canny(gray, 50, 150, apertureSize=3)
-  
-    # This returns an array of r and theta values
-    lines = cv2.HoughLines(edges, 1, np.pi/180, 200)
-  
-    # Initialize empty lists to store the left and bottom lines
-    left_line = []
-    bottom_line = []
-
-    offset = 10
-
-    # Iterate over the detected lines
-    for line in lines:
-        rho, theta = line[0]
-        a = np.cos(theta)
-        b = np.sin(theta)
-        x0 = a * rho
-        y0 = b * rho
-        x1 = int(x0 + 1000 * (-b))
-        y1 = int(y0 + 1000 * (a))
-        x2 = int(x0 - 1000 * (-b))
-        y2 = int(y0 - 1000 * (a))
-
-        if abs(theta) < np.pi / 4:
-            # Check if line is leftmost
-            if (not left_line) or (x1 < left_line[0] and x2 < left_line[2]):
-                left_line = (x1, y1, x2, y2)
-        else:
-            # Check if line is bottommost
-            if (not bottom_line) or (y1 > bottom_line[1] and y2 > bottom_line[3]):
-                bottom_line = (x1, y1, x2, y2)
-
-    #calculating the slope of the lines
-    slope1 = (bottom_line[3]-bottom_line[1])/(bottom_line[2]-bottom_line[0])
-    slope2 = (left_line[3]-left_line[1])/(left_line[2]-left_line[0]) if (left_line[2]-left_line[0])!=0 else 0.00001
-    
-    #if slope of the lines is close to infinity or close to 0, that means the lines are almost vertical or horizontal
-    if abs(slope1) < 0.1  or abs(slope1) > 10:
-        cv2.line(img, (bottom_line[0], bottom_line[1]), (bottom_line[2], bottom_line[3]), (0, 0, 255), 2)
-    if abs(slope2) < 0.1 or abs(slope2) > 10:
-        cv2.line(img, (left_line[0], left_line[1]), (left_line[2], left_line[3]), (0, 0, 255), 2)
-    cv2.imwrite("result2.png", img)
-'''
 
 def axisLines(file_Name, i):
     img = cv2.imread(file_Name)  
@@ -293,59 +252,25 @@ def axisLines(file_Name, i):
 
                                 if (j, i) not in marked_positions:
                             
-                            # mark the position with a red dot
+                                    # mark the position with a red dot
                                     img[i, j] = [0, 0, 255]
-                            # add the position to the set of marked positions
-                            #marked_positions.add((j, i)) # no difference
-                            
+                                    
+                                    # add the position to the set of marked positions
+                                    #marking the positions so that the red dot is only one pixel
                                     marked_positions.add((j+1, i+1))
                                     marked_positions.add((j, i+2))
                                     marked_positions.add((j+3, i+2))
-                            
-                            
                                     marked_positions.add((j+1, i+3))
                                     marked_positions.add((j, i+3))
                                     marked_positions.add((j, i+1))
-                            #marked_positions.add((j-1, i)) # no difference
-                            #marked_positions.add((j+2, i)) #red dot should be one pixel
-
-                            
-                            
-
-                        
-                        
-                                    
-                                    cv2.line(img, (j, i), (j-2000, i), (255, 0, 255), 1) #Draw the horizontal pink line
+                     
+                                    #Draw the horizontal pink line
+                                    cv2.line(img, (j, i), (j-2000, i), (255, 0, 255), 1) 
 
                             # Check if the starting point of the line is not inside the bounding boxes
 
-
-
-                                
-                                    
-                            
-    
-                            # i is the y value in pixels
-                            #Need to get the y position of the intersection
-
-                            #slope1 - bottom line slope
-                            #slope2 - left line slope
-
-                            #x1,y1 and x2, y2 are the 2 ends of the bottom line
-                            #x3, y3 and x4, y4 are the 2 ends of the left line
-
-                                #x = (y1 + slope1*x1 - y3 + slope2*y3 - slope2*y1 - slope1*slope2*x1)/(slope1*(1 - slope2))
-                                #y = y1 - slope1*x1 + slope1*x
                                     calculatingYValue(line_start_point, xintersection, yintersection, left_boxes, left_txts)
-                            
-                            #print(yintersection)
-                            #print(xintersection)        #Get this using the equation for a rotated image.
-                                
 
-                            #ynew = (y3 -slope2*y3)/(1 - slope2)
-                            #print("y", y)
-                            #print("ynew", ynew)
-                            #print(float(x), "x")
                             
                             
         res_final = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
@@ -362,64 +287,7 @@ def axisLines(file_Name, i):
         lowest_value_pixel = (lowest_value1+lowest_value2)/2
         
         print(highest_value_pixel)
-        print(lowest_value_pixel)
-            
-        
-
-        
-        
-        #cv2.imwrite("cropped_image_without_contours.png", cropped_image_without_contours)
-        #if(rect[2][1] < bottom_line[3] and rect[3][1] < bottom_line[1] and w*h> 100):
-                #print([(rect[i][0], rect[i][1]) for i in range(4)])
-                #cv2.line(img, (0, int(rect[0][1])), (int(rect[0][0])+1000, int(rect[0][1])), (255, 0, 255), 1)
-
-
-        #cv2.imshow("boxes", mask)
-        #cv2.imshow("final image", res_final)
-        #cv2.waitKey(0)
-        #cv2.destroyAllWindows()
-
-
-
-        
-
-        '''
-        x, y, w, h = cv2.boundingRect(c)
-        rect = cv2.boxPoints(cv2.minAreaRect(c))
-        
-        #print(bottom_line)
-        
-        print([(rect[i][0], rect[i][1]) for i in range(4)])
-
-        #if(rect[2][1] < bottom_line[3] and rect[3][1] < bottom_line[1] and w*h> 100):
-                #print([(rect[i][0], rect[i][1]) for i in range(4)])
-                #cv2.line(img, (0, int(rect[0][1])), (int(rect[0][0])+1000, int(rect[0][1])), (255, 0, 255), 1)
-
-        #print(rect[0][0])
-        #print(left_line[0])
-        
-            #for i in range(2):
-                #for j in range (2):
-                    #if(rect[i][j] == bottom_line[1] or bottom_line[3]): #if there is an equality with the bottom_line
-                        #print("Yes")                                                                        # That means it's one of the bars
-                
-        #x, y = rect[i][0], rect[i][1]
-        #print("X position: ", x, "Y position: ", y)
-        if cv2.contourArea(c) > 1000:
-            
-            
-        #if w*h>1000: #Check if this displays the ledgend for all images
-            cv2.drawContours(img,[c], 0, (0,255,0), 1)
-            cv2.rectangle(mask, (x, y), (x+w, y+h), (0, 0, 255), -1)
-            
-                
-            '''
-                #cv2.line(img, (0, 100), (500, 100), (255, 0, 255), 5)
-            
-                #print("X position: ", x, "Y position: ", y)
-                
-
-                    
+        print(lowest_value_pixel)             
             
             
     #res_final = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
@@ -431,19 +299,6 @@ def axisLines(file_Name, i):
     #cv2.imshow("final image", res_final)
     #cv2.waitKey(0)
     #cv2.destroyAllWindows()
-    
-    '''
-    cnts = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-
-    for c in cnts:
-        if c[0][0][1] < bottom_line[3] and c[0][0][0] > left_line[0]: 
-            cv2.drawContours(img,[c], 0, (0,200,0), 1)
-            print("x: ", c[0][0][0], "y: ", c[0][0][1])
-
-    cv2.imshow("result", img)
-    cv2.waitKey(0)
-    '''
     
     
     #INCREASE ACCURACY OF THE AXIS DETECTION
@@ -457,5 +312,5 @@ def fileNames():
     for i in filenames:
         axisLines(f"{folder}/{i}", i)
 #fileNames()
-axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC71.jpg", 1)
+axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC59.jpg", 1)
 #axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/New folder(2)/result.png", 1)
