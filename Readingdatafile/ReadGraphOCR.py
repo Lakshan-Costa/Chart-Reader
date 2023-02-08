@@ -45,15 +45,22 @@ def createTable(line_start_point, yvalue_list):
 
     sorted_bottom_txts = [bottom_txts[bottomy.index(box)] for box in bottom_boxes]
 
-
-    print(len(sorted_bottom_txts))
-    print(len(yvalue_list))
-
     table = pd.DataFrame(
         {"x axis": sorted_bottom_txts[:-1],
          "y axis": yvalue_list
         
         })
+
+    table2Titles = ["", "Chart Name", "Chart Type", "x Axis Name", "y Axis Name", "Legend"]
+    table2Descriptions = ["", "", "", sorted_bottom_txts[-1], "", ""]
+
+    table2 = pd.DataFrame({
+        "x axis": table2Titles,
+        "y axis": table2Descriptions
+        })
+
+    table = table.append(table2, ignore_index = True)
+    
     print(table)
     
 
