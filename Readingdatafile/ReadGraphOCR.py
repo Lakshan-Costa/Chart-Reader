@@ -6,6 +6,10 @@ import cv2
 import numpy as np
 from os import walk
 from PIL import Image
+import pandas as pd
+
+global yvalue_list
+yvalue_list = []
 
 def VerticalBarChart():
     print("Vertical Bar chart")
@@ -14,19 +18,62 @@ def HorizontalBarChart():
     print("Horizontal Bar chart")
 
 
-def createTable(line_start_point, yvalue):
+def createTable(line_start_point, yvalue_list):
+    print(bottom_boxes)
+    print(bottom_txts)
+    print("***************************************")
+    #print(line_start_point)
+    #print(yvalue)
+
+    bottomy = sorted(bottom_boxes, key=lambda x: x[1][1])
+    bottomx = sorted(bottom_boxes, key=lambda x: x[1][0])
+
+    secondbottomx = bottomx[-2]
+
+    #print(str(bottomx))
+
+    maxbottomy = bottomy[-1]
+    maxbottomx = bottomx[-1] #Remove this and add 2nd to last
+
+    bottomy.remove(maxbottomx)
+    bottomy.remove(maxbottomy)
+
+    #print(bottomy)
+    bottomy = sorted(bottomy, key=lambda x: x[1][0])
+    bottomy.append(maxbottomx)
+    bottomy.append(maxbottomy) # THIS IS THE TITLE OF THE X AXIS
+
+    sorted_bottom_txts = [bottom_txts[bottomy.index(box)] for box in bottom_boxes]
+
+
+    print(len(sorted_bottom_txts))
+    print(len(yvalue_list))
+
+    table = pd.DataFrame(
+        {"x axis": sorted_bottom_txts[:-1],
+         "y axis": yvalue_list
+        
+        })
+    print(table)
+    
+
+    #print(bottomy)
+
+    #print(bottomx)
+    
+
+    #print(bottomx)
+    # Output: [[273.0, 497.0], [337.0, 497.0], [337.0, 511.0], [273.0, 511.0]]
     print()
 
-    print("""|x | y |
-             |yvalue| bottom_boxes """)
 
 def calculatingYValue(line_start_point, xintersection, yintersection, left_boxes, left_txts):
     sorted_lines = sorted(left_boxes, key=lambda x: (x[0][1] + x[2][1])/2)
     maxleftbox = ((sorted_lines[0][1][1] +sorted_lines[0][2][1])/2)
     minleftbox = (sorted_lines[-1][1][1] + sorted_lines[-1][2][1])/2
 
-    maxlefttext = int(left_txts[0])
-    minlefttext = int(left_txts[-1])
+    maxlefttext = float(left_txts[0])
+    minlefttext = float(left_txts[-1])
 
     #print(minlefttext, maxlefttext) #Minimum text value and Maximum text value
 
@@ -34,13 +81,16 @@ def calculatingYValue(line_start_point, xintersection, yintersection, left_boxes
     #print(line_start_point[1]) #The bar chart y value
 
     yvalue = ((line_start_point[1] - yintersection) * (maxlefttext - minlefttext))/(maxleftbox - yintersection) # This is the Y value test it
-    print(yvalue, 1)
+    #print(yvalue, 1)
 
-    createTable(line_start_point, yvalue)
-    
+
+    yvalue_list.append(yvalue)
+
+    if (len(yvalue_list) == len(bottom_boxes) - 1):
+        createTable(line_start_point, yvalue_list)
 
 def dataOCR(left_line, bottom_line, top_border_line):
-    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC59.jpg'
+    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC105.jpg'
 
     x1, y1, x2, y2 = left_line
     x3, y3, x4, y4 = bottom_line
@@ -269,6 +319,8 @@ def axisLines(file_Name, i):
 
                             # Check if the starting point of the line is not inside the bounding boxes
 
+                                    
+
                                     calculatingYValue(line_start_point, xintersection, yintersection, left_boxes, left_txts)
 
                             
@@ -286,8 +338,8 @@ def axisLines(file_Name, i):
         highest_value_pixel = (highest_value1+highest_value2)/2
         lowest_value_pixel = (lowest_value1+lowest_value2)/2
         
-        print(highest_value_pixel)
-        print(lowest_value_pixel)             
+        #print(highest_value_pixel)
+        #print(lowest_value_pixel)             
             
             
     #res_final = cv2.bitwise_and(img, img, mask=cv2.bitwise_not(mask))
@@ -312,5 +364,5 @@ def fileNames():
     for i in filenames:
         axisLines(f"{folder}/{i}", i)
 #fileNames()
-axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC59.jpg", 1)
+axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC105.jpg", 1)
 #axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/New folder(2)/result.png", 1)
