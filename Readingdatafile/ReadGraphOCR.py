@@ -7,6 +7,8 @@ import numpy as np
 from os import walk
 from PIL import Image
 import pandas as pd
+from tensorflow import keras
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 global yvalue_list
 yvalue_list = []
@@ -19,11 +21,6 @@ def HorizontalBarChart():
 
 
 def createTable(line_start_point, yvalue_list):
-    print(bottom_boxes)
-    print(bottom_txts)
-    print("***************************************")
-    #print(line_start_point)
-    #print(yvalue)
 
     bottomy = sorted(bottom_boxes, key=lambda x: x[1][1])
     bottomx = sorted(bottom_boxes, key=lambda x: x[1][0])
@@ -45,6 +42,24 @@ def createTable(line_start_point, yvalue_list):
 
     sorted_bottom_txts = [bottom_txts[bottomy.index(box)] for box in bottom_boxes]
 
+
+
+    #Try to get using the same method used in the x axis 
+    for i, element in enumerate(left_txts):
+        try:
+            left_txts[i] = float(element)
+        except ValueError:
+            pass
+
+    for item in left_txts:
+        if isinstance(item, str):
+            ytitle = item
+            break
+
+    titley = sorted(title_boxes, key=lambda x: x[1][1])
+    sorted_title_txts = [title_txts[titley.index(box)] for box in title_boxes]
+
+    
     table = pd.DataFrame(
         {"x axis": sorted_bottom_txts[:-1],
          "y axis": yvalue_list
@@ -52,7 +67,7 @@ def createTable(line_start_point, yvalue_list):
         })
 
     table2Titles = ["", "Chart Name", "Chart Type", "x Axis Name", "y Axis Name", "Legend"]
-    table2Descriptions = ["", "", "", sorted_bottom_txts[-1], "", ""]
+    table2Descriptions = ["", sorted_title_txts[0], chartType, sorted_bottom_txts[-1], ytitle, sorted_title_txts[1]]
 
     table2 = pd.DataFrame({
         "x axis": table2Titles,
@@ -97,7 +112,7 @@ def calculatingYValue(line_start_point, xintersection, yintersection, left_boxes
         createTable(line_start_point, yvalue_list)
 
 def dataOCR(left_line, bottom_line, top_border_line):
-    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC105.jpg'
+    img_path = 'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC223.jpg'
 
     x1, y1, x2, y2 = left_line
     x3, y3, x4, y4 = bottom_line
@@ -126,13 +141,14 @@ def dataOCR(left_line, bottom_line, top_border_line):
     left_scores = []
     # Get the boxes, texts, and scores for the lines on the bottom of the line
 
-
     global bottom_boxes
     global bottom_txts
     bottom_boxes = []
     bottom_txts = []
     bottom_scores = []
 
+    global title_boxes
+    global title_txts
     title_boxes = []
     title_txts = []
     title_scores = []
@@ -264,7 +280,7 @@ def axisLines(file_Name, i):
         x, y, w, h = cv2.boundingRect(c)
         rect = cv2.boxPoints(cv2.minAreaRect(c))
         
-        cv2.drawContours(img, [c], 0, (0,255,255), 2)
+        cv2.drawContours(img, [c], 0, (0,255,255), 1)
         cv2.rectangle(mask, (x, y), (x+w, y+h), (0, 0, 255), -1)
         print([(rect[i][0], rect[i][1]) for i in range(4)])
 
@@ -370,6 +386,46 @@ def fileNames():
     filenames = next(walk(folder), (None, None, []))[2]  # [] if no file
     for i in filenames:
         axisLines(f"{folder}/{i}", i)
+
+def checkChartType(fileName):
+    model = keras.models.load_model("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Chart_Classification_79.h5")
+
+    train_datagen = ImageDataGenerator(rescale=1/255, validation_split=0.1)
+    train_generator = train_datagen.flow_from_directory(
+        'C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images',
+        target_size = (300, 300),
+        batch_size = 256,
+        class_mode = 'categorical',
+        subset = 'training'
+    )
+
+    # Load and preprocess the image
+    img = Image.open("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/test/1381.png")
+    img = img.resize((300, 300))
+    x = np.array(img)
+    x = x[:, :, :3] # Remove the 4th channel
+    x = x / 255. # Scale pixel values to [0, 1]
+    x = np.expand_dims(x, axis=0) # Add an extra dimension
+
+    # Pass the image through the model
+    preds = model.predict(x)
+
+    # Get the class with the highest predicted probability
+    class_idx = np.argmax(preds[0])
+
+    # Get the class labels from the generator
+    class_labels = train_generator.class_indices
+    class_labels = {v: k for k, v in class_labels.items()}
+
+    # Display the predicted class
+    global chartType
+    chartType = f"{class_labels[class_idx]}"
+
+    axisLines(fileName, 1)
+    
+    
 #fileNames()
-axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC105.jpg", 1)
+#axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC25.jpg", 1)
+checkChartType("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/Images/Vertical_Bar_chart/VBC223.jpg")
+
 #axisLines("C:/Users/Lakshan/OneDrive/Documents/GitHub/Chart-Reader/New folder(2)/result.png", 1)
